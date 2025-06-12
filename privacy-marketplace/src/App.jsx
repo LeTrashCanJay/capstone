@@ -1,45 +1,55 @@
 import { useState, useEffect } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import CookieModal from '@/components/CookieModal';
+import Marketplace from './components/Marketplace';
+import Checkout from '@/components/Checkout';
+import Cart from './components/Cart';
+import { getCheckoutSummary } from './api/cookies';
+import { getEulaStatus } from './api/eula';
 import './App.css';
 import axios from 'axios';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [showModal, setShowModal] = useState(true);
+  const [cart, setCart] = useState([]);
+  const [prefs, setPrefs] = useState({});
+  const [eulaAccepted, setEulaAccepted] = useState(false);
 
-  const fetchAPI = async () => {
-    const response = await axios.get("http://localhost:8080/api");
-    console.log(response.data.testArray);
-  };
-
-  useEffect(()=> {
-    fetchAPI();
+  useEffect(() => {
+    getCheckoutSummary(1).then(data => {
+      if (data?.basedOn) setPrefs(data.basedOn);
+    });
+    getEulaStatus(1).then(setEulaAccepted);
   }, []);
 
+  const addToCart = (item) => {
+    setCart((prev) => [...prev, item]);
+
+    if (prefs.analytics) {
+      console.log(`[analytics] Added to cart: ${item.name}`);
+      axios.post('/api/log', { item, user_id: 1});
+    }
+  };
+
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="container">
+      <header>
+        <h1>Privacy Marketplace</h1>
+        <p>Learn what you give away with each click</p>
+      </header>
+
+      {showModal && <CookieModal onClose={() => setShowModal(false)} />}
+      {!eulaAccepted ? (
+        <EULA onAccept={() => setEulaAccepted(true)} />
+      ) : (
+
+      <main>
+        <Marketplace addToCart={addToCart} />
+        <Cart cart={cart} />
+        <Checkout />
+      </main>
+      )}
+    </div>
+  );
 }
 
 export default App

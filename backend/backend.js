@@ -1,6 +1,20 @@
 const express = require("express");
 const app = express();
-const mysql = require("mysql")
+const mysql = require("mysql");
+const cors = require("cors");
+const corsOptions = {
+    origin: ["http://localhost:5173"],
+};
+
+app.use(cors(corsOptions));
+
+app.get("/api", (req, res) => {
+    res.json({testArray: [1, 2, 3]});
+});
+
+app.listen(8080, () => {
+    console.log("Server started on port 8080");
+});
 
 const connection = mysql.createConnection({
     host: "localhost",

@@ -5,6 +5,7 @@ import Checkout from '@/components/Checkout';
 import Cart from './components/Cart';
 import { getCheckoutSummary } from './api/cookies';
 import { getEulaStatus } from './api/eula';
+import EULA from './components/EULA';
 import './App.css';
 import axios from 'axios';
 

@@ -1,3 +1,5 @@
+console.log("Booting backend...");
+console.log("RUNNING FILE:", __filename);
 const path = require('path');
 const express = require("express");
 const app = express();
@@ -8,16 +10,15 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use(express.static(path.join(__dirname, 'dist')));
+const frontendPath = path.join(__dirname, '..', 'privacy-marketplace');
 
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+app.use(express.static(frontendPath));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 
-app.listen(8080, () => {
-    console.log("Server started on port 8080");
-});
 
 const connection = mysql.createConnection({
     host: "localhost",
@@ -33,20 +34,20 @@ connection.connect(function(err) {
     }
 });
 
-$query = "SELECT * FROM users";
+// // const query = "SELECT * FROM users";
 
-connection.query($query, function(err, rows, fields) {
-    if(err) {
-        console.log("An error occured with the query");
-        return;
-    }
+// connection.query(query, function(err, rows, fields) {
+//     if(err) {
+//         console.log("An error occured with the query");
+//         return;
+//     }
 
-    console.log("Query Successfully Executed.", rows);
-});
+//     console.log("Query Successfully Executed.", rows);
+// });
 
-connection.end(function(){
-    console.log("Connection closed.")
-});
+// connection.end(function(){
+//     console.log("Connection closed.")
+// });
 
 app.post('/api/cookie-settings', (req, res) => {
     const {
@@ -54,7 +55,7 @@ app.post('/api/cookie-settings', (req, res) => {
         strictly_necessary,
         performance,
         analytics,
-        advertisng
+        advertising
     } = req.body;
 
     const sql = `
@@ -68,7 +69,7 @@ app.post('/api/cookie-settings', (req, res) => {
       analytics = VALUES(analytics),
       advertising = VALUES(advertising)
   `;
-    db.query(sql, [user_id, strictly_necessary, performance, analytics, advertising], (err) => {
+    connection.query(sql, [user_id, strictly_necessary, performance, analytics, advertising], (err) => {
     if (err) return res.status(500).json({ error: 'Database error' });
     res.json({ status: 'saved' });
     });
@@ -79,7 +80,7 @@ app.get('/api/checkout-summary', (req, res) => {
 
   const sql = `SELECT * FROM cookie_preferences WHERE user_id = ?`;
 
-  db.query(sql, [user_id], (err, results) => {
+  connection.query(sql, [user_id], (err, results) => {
     if (err) return res.status(500).json({ error: 'Database error' });
     if (!results.length) {
         return res.json({ exists: false });
@@ -103,11 +104,20 @@ app.get('/api/checkout-summary', (req, res) => {
 });
 
 
-app.get('/api/items', (req, res) => {
-  res.json([
-    { id: 1, name: 'Privacy Cloak', price: 19.99 },
-    { id: 2, name: 'Cookie Destroyer', price: 14.99 }
-  ]);
+app.get('/api/items/:id', (req, res) => {
+  const queries = [
+    'SELECT id, name, price, "webapp" as category FROM webapps',
+    'SELECT id, title AS name, price, "ebook" as category FROM ebooks',
+    'SELECT id, title AS name, price, "movie" as category FROM movies',
+    'SELECT id, title AS name, price, "videogame" as category FROM videogames'
+  ];
+
+  const fullQuery = queries.join(' UNION ALL ');
+
+  connection.query(fullQuery, (err, results) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    res.json(results);
+  });
 });
 
 app.post('/api/eula', (req, res) => {
@@ -117,7 +127,7 @@ app.post('/api/eula', (req, res) => {
     VALUES (?, ?)
     ON DUPLICATE KEY UPDATE accepted = VALUES(accepted), accepted_at = CURRENT_TIMESTAMP
   `;
-  db.query(sql, [user_id, accepted], (err) => {
+  connection.query(sql, [user_id, accepted], (err) => {
     if (err) return res.status(500).json({ error: 'DB error' });
     res.json({ status: 'EULA status recorded' });
   });
@@ -126,9 +136,13 @@ app.post('/api/eula', (req, res) => {
 app.get('/api/eula-status', (req, res) => {
   const { user_id } = req.query;
   const sql = `SELECT accepted FROM eula_acceptance WHERE user_id = ?`;
-  db.query(sql, [user_id], (err, results) => {
+  connection.query(sql, [user_id], (err, results) => {
     if (err) return res.status(500).json({ error: 'DB error' });
     if (!results.length) return res.json({ accepted: 0 });
     res.json({ accepted: results[0].accepted });
   });
+});
+
+app.listen(8080, () => {
+    console.log("Server started on port 8080");
 });

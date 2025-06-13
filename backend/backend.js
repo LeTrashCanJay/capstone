@@ -10,6 +10,8 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.use(express.json());
+
 const frontendPath = path.join(__dirname, '..', 'privacy-marketplace');
 
 app.use(express.static(frontendPath));
@@ -104,7 +106,7 @@ app.get('/api/checkout-summary', (req, res) => {
 });
 
 
-app.get('/api/items/:id', (req, res) => {
+app.get('/api/items', (req, res) => {
   const queries = [
     'SELECT id, name, price, "webapp" as category FROM webapps',
     'SELECT id, title AS name, price, "ebook" as category FROM ebooks',
@@ -115,7 +117,11 @@ app.get('/api/items/:id', (req, res) => {
   const fullQuery = queries.join(' UNION ALL ');
 
   connection.query(fullQuery, (err, results) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
+    if (err) {
+      console.error("Database query failed:", err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    console.log("Query results:", results)
     res.json(results);
   });
 });

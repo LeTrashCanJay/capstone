@@ -15,9 +15,14 @@ export default function CookieModal({ onClose }) {
   };
 
   const handleSave = async () => {
+    try {
     await saveCookiePreferences(prefs);
-    onClose();
-  };
+    onClose(); // only run if save was successful
+  } catch (error) {
+    console.error("Failed to save cookie prefs:", error);
+    alert("An error occurred saving preferences. Please try again.");
+  }
+};
 
   return (
     <div className="container">

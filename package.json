@@ -4,9 +4,16 @@
     "axios": "^1.9.0",
     "cors": "^2.8.5",
     "mysql": "^2.18.1",
+    "react-router-dom": "^7.6.2",
     "tailwindcss": "^4.1.8"
   },
   "devDependencies": {
-    "@types/node": "^24.0.0"
+    "@types/node": "^24.0.0",
+    "concurrently": "^9.1.2"
+  },
+  "scripts": {
+    "start": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
+    "dev:client": "npm --prefix privacy-marketplace run dev",
+    "dev:server": "node backend.js"
   }
 }

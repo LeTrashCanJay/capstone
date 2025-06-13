@@ -1,20 +1,23 @@
 import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import axios from 'axios';
 
 export default function Marketplace({ addToCart }) {
   const [groupedItems, setGroupedItems] = useState({});
 
+  const { category } = useParams();
+  console.log("Loaded category:", category);
+
   useEffect(() => {
     axios.get('/api/items').then(res => {
-      const groups = res.data.reduce((acc, item) => {
-        const category = item.category;
-        if (!acc[category]) acc[category] = [];
-        acc[category].push(item);
-        return acc;
-      }, {});
-      setGroupedItems(groups);
+      console.log("Fetched items:", res.data);
+      const filtered = res.data.filter(item =>
+        item.category.toLowerCase().replace(/\s/g, '') === category
+      );
+      console.log("Filtered items:", filtered);
+      setGroupedItems({ [category]: filtered })
     });
-  }, []);
+  }, [category]);
 
   return (
     <div className="container">

@@ -108,10 +108,10 @@ app.get('/api/checkout-summary', (req, res) => {
 
 app.get('/api/items', (req, res) => {
   const queries = [
-    'SELECT id, name, price, "webapp" as category FROM webapps',
-    'SELECT id, title AS name, price, "ebook" as category FROM ebooks',
-    'SELECT id, title AS name, price, "movie" as category FROM movies',
-    'SELECT id, title AS name, price, "videogame" as category FROM videogames'
+    'SELECT id, name, price, "webapps" as category FROM webapps',
+    'SELECT id, title AS name, price, "ebooks" as category FROM ebooks',
+    'SELECT id, title AS name, price, "movies" as category FROM movies',
+    'SELECT id, title AS name, price, "videogames" as category FROM videogames'
   ];
 
   const fullQuery = queries.join(' UNION ALL ');

@@ -1,43 +1,42 @@
-import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 export default function Marketplace({ addToCart }) {
-  const [groupedItems, setGroupedItems] = useState({});
-
   const { category } = useParams();
-  console.log("Loaded category:", category);
+  const [items, setItems] = useState([]);
 
   useEffect(() => {
     axios.get('/api/items').then(res => {
-      console.log("Fetched items:", res.data);
-      const filtered = res.data.filter(item =>
-        item.category.toLowerCase().replace(/\s/g, '') === category
-      );
-      console.log("Filtered items:", filtered);
-      setGroupedItems({ [category]: filtered })
-    });
+        const all = res.data;
+
+        console.log("Category from URL:", category);
+        console.log("Categories from API:", all.map(i => i.category));
+
+        const filtered = res.data.filter(item =>
+          item.category.toLowerCase() === category.toLowerCase()
+        );
+        console.log("Filtered items for category:", category, filtered);
+        setItems(filtered);
+      })
+      .catch(err => console.error("Error fetching items:", err));
   }, [category]);
 
   return (
     <div className="container">
-      <h2>Marketplace</h2>
-      {Object.entries(groupedItems).map(([category, items]) => (
-        <div key={category} className="mb-6">
-          <h3 className="text-lg font-semibold capitalize">{category}s</h3>
-          <div className="store-grid">
-            {items.map((item) => (
-              <div key={item.id} className="item-card">
-                <h4>{item.name}</h4>
-                <p>${item.price.toFixed(2)}</p>
-                <button className="btn btn-primary" onClick={() => addToCart(item)}>
-                  Add to Cart
-                </button>
-              </div>
-            ))}
+      <h2>{category.charAt(0).toUpperCase() + category.slice(1)} Store</h2>
+      <p>Debug: items.length = {items.length}</p>
+      <div className="store-grid">
+        {items.map(item => (
+          <div key={item.id} className="item-card">
+            <h4>{item.name}</h4>
+            <p>${item.price.toFixed(2)}</p>
+            <button className="btn btn-primary" onClick={() => addToCart(item)}>
+              Add to Cart
+            </button>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
